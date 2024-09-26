@@ -106,6 +106,8 @@ public class MovieRepository implements CommonRepository<Movie, Long> {
 
     public Paging<Movie> findSimilarByGenres(Movie entity, PagingRequest pagingRequest) {
 
+        System.out.println("쿼리 실행");
+
         List<MovieGenre> movieGenres = entity.getMovieGenres();
         List<Long> genreIds = movieGenres.stream().map(e -> e.getGenre().getId()).collect(Collectors.toList());
 
@@ -117,28 +119,29 @@ public class MovieRepository implements CommonRepository<Movie, Long> {
         }
         // 검색한 영화와 같은 MovieGenre 엔티티만 제외
         for (MovieGenre entitiesMovieGenre : movieGenres) {
-            genreCond.andNot(movieGenre.id.eq(entitiesMovieGenre.getId()));
+            genreCond.andNot(movieGenre.eq(entitiesMovieGenre));
         }
 
-        List<MovieGenre> list = queryFactory.select(movieGenre)
-                .from(movieGenre)
-                .join(movieGenre.genre, genre).fetchJoin()
+        //
+        List<Movie> list = queryFactory.selectDistinct(movie)
+                .from(movie)
+                .join(movie.movieGenres, movieGenre)
                 .where(genreCond)
                 .offset(pagingRequest.getOffset())
                 .limit(pagingRequest.getLimit())
+                .orderBy(movie.popularity.desc())
                 .fetch();
 
         // 프록시 객체 초기화
-        for (MovieGenre searchedMovieGenre : list) {
-            searchedMovieGenre.getMovie().getId();
+        for (Movie movie : list) {
+            for (MovieGenre movieGenre : movie.getMovieGenres()) {
+                movieGenre.getId();
+            }
         }
-
-        List<Movie> movies = list.stream().map(e -> e.getMovie())
-                .collect(Collectors.toList());
 
         int totalCount = selectCountAll().intValue();
         int totalPage = getTotalPage(totalCount, pagingRequest.getLimit());
-        return new Paging(pagingRequest.getRequestPage(), movies, totalCount, totalPage, pagingRequest.getLimit());
+        return new Paging(pagingRequest.getRequestPage(), list, totalCount, totalPage, pagingRequest.getLimit());
 
     }
 
