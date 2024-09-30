@@ -19,6 +19,9 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
           
+      - name: Change gradlew permissions
+        run: chmod +x ./gradlew
+          
       # gradle build
       - name: Build with Gradle
         run: ./gradlew build -x test
