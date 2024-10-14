@@ -23,7 +23,7 @@ spring:
       ddl-auto: none
     properties:
       hibernate:
-        show_sql: true-
+        show_sql: true
         format_sql: true
         default_batch_fetch_size: 40
         # 100으로 하면 limit=20인 쿼리가 12/8로 나뉘어서 나간다. 1~10, 12, 25, 50, 100중 12와 8로 처리하기 때문
