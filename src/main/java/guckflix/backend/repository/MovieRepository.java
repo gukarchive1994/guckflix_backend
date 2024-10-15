@@ -11,14 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static guckflix.backend.config.QueryWeight.*;
-import static guckflix.backend.entity.QGenre.genre;
-import static guckflix.backend.entity.QMovie.*;
 import static guckflix.backend.entity.QMovie.movie;
 import static guckflix.backend.entity.QMovieGenre.movieGenre;
 
@@ -105,8 +101,6 @@ public class MovieRepository implements CommonRepository<Movie, Long> {
     }
 
     public Paging<Movie> findSimilarByGenres(Movie entity, PagingRequest pagingRequest) {
-
-        System.out.println("쿼리 실행");
 
         List<MovieGenre> movieGenres = entity.getMovieGenres();
         List<Long> genreIds = movieGenres.stream().map(e -> e.getGenre().getId()).collect(Collectors.toList());

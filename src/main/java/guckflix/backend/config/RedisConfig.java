@@ -39,22 +39,21 @@ public class RedisConfig {
     private String password;
 
     @Bean
-    public RedisConnectionFactory redisConnectionFactory()
-    {
+    public RedisConnectionFactory redisConnectionFactory() {
         RedisStandaloneConfiguration config = new RedisStandaloneConfiguration(host, port);
         config.setPassword(password);
         return new LettuceConnectionFactory(config);
     }
 
 
-//    @Bean
-//    public RedisTemplate<String, String> redisTemplate() {
-//        RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
-//        redisTemplate.setKeySerializer(new StringRedisSerializer());
-//        redisTemplate.setValueSerializer(new StringRedisSerializer());
-//        redisTemplate.setConnectionFactory(redisConnectionFactory());
-//        return redisTemplate;
-//    }
+    @Bean
+    public RedisTemplate<String, String> redisTemplate() {
+        RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setValueSerializer(new StringRedisSerializer());
+        redisTemplate.setConnectionFactory(redisConnectionFactory());
+        return redisTemplate;
+    }
 
     @Bean
     public CacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) {
@@ -83,7 +82,7 @@ public class RedisConfig {
         RedisCacheConfiguration redisCacheConfiguration = RedisCacheConfiguration.defaultCacheConfig()
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer(objectMapperForRedis))) // Value Serializer 변경
-                .entryTtl(Duration.ofMinutes(3L)); // 캐시 수명 30분
+                .entryTtl(Duration.ofMinutes(3L)); // 캐시 수명 3분
 
         return RedisCacheManager.RedisCacheManagerBuilder.fromConnectionFactory(redisConnectionFactory).cacheDefaults(redisCacheConfiguration).build();
     }
