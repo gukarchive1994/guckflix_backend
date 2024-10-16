@@ -28,32 +28,27 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(value = NotFoundException.class)
     public ResponseEntity<ResponseDto> notFound(NotFoundException e) {
-        log.info("NotFoundException", e);
         ResponseDto errorResponse = new ResponseDto(HttpStatus.BAD_REQUEST.value(),HttpStatus.NOT_FOUND, e.getMessage());
         return ResponseEntity.badRequest().body(errorResponse);
     }
 
     @ExceptionHandler(value = NotAllowedIdException.class)
     public ResponseEntity<ResponseDto> notAllowedId(NotAllowedIdException e) {
-        log.info("NotAllowedIdException", e);
         ResponseDto errorResponse = new ResponseDto(HttpStatus.BAD_REQUEST.value(),HttpStatus.BAD_REQUEST, e.getMessage());
         return ResponseEntity.badRequest().body(errorResponse);
     }
 
     @ExceptionHandler(value = DuplicateException.class)
     public ResponseEntity<ResponseDto> memberDuplicate(DuplicateException e) {
-        log.info("DuplicateException", e);
         ResponseDto errorResponse = new ResponseDto(HttpStatus.CONFLICT.value(),HttpStatus.CONFLICT, e.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(value = RuntimeIOException.class)
     public ResponseEntity<ResponseDto> notFound(RuntimeIOException e) {
-        log.info("RuntimeIOException", e);
         ResponseDto errorResponse = new ResponseDto(HttpStatus.BAD_REQUEST.value(),HttpStatus.BAD_REQUEST, e.getMessage());
         return ResponseEntity.badRequest().body(errorResponse);
     }
-
 
     /**
      * 요청 Locale에 따라 BindingResult 응답 메세지 변경
@@ -62,7 +57,6 @@ public class ApiExceptionHandler {
     @ExceptionHandler(value = BindException.class)
     public ResponseEntity<BindErrorDto> bindException(BindException e, Locale locale) {
         String message = locale.getLanguage().equals("en") ? "validation fail" : "잘못된 요청입니다";
-        log.info("BindException", e);
         BindErrorDto bindErrorDto = new BindErrorDto(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST, message, e.getFieldErrors(), e.getAllErrors(), messageSource, locale);
         return ResponseEntity.badRequest().body(bindErrorDto);
     }
