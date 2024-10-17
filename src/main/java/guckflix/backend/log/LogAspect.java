@@ -1,15 +1,28 @@
 package guckflix.backend.log;
 
+import com.google.common.collect.Lists;
+import guckflix.backend.entity.Member;
+import guckflix.backend.exception.NotFoundException;
+import guckflix.backend.security.authen.PrincipalDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * 요구사항 :
@@ -33,14 +46,59 @@ public class LogAspect {
 
     // 이미지 컨트롤러는 제외. 관리해야 하는 키가 너무 많음
     @Pointcut("execution(* guckflix.backend.controller.*.*(..)) && !execution(* guckflix.backend.controller.ImageController.*(..))")
-    public void allController() {
+    public void allControllerNotImage() {
     }
 
-    @Before("allController()")
+    // 집계 AOP
+    @Before("allControllerNotImage()")
     public void apiCountLogging() throws Throwable {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
         String requestURI = request.getRequestURI();
         inMemoryService.addCount(requestURI);
     }
 
+    // 익셉션 로깅 AOP
+    @AfterThrowing(pointcut = "execution(* guckflix.backend.controller.*.*(..))", throwing = "e")
+    public void exceptionLogging(JoinPoint joinPoint, Exception e) {
+
+        // 사용자 정보
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        StringBuffer userInfo = new StringBuffer();
+
+        if(authentication.getPrincipal() == "anonymousUser") {
+            userInfo.append("anonymous");
+        } else {
+            Member member = ((PrincipalDetails) authentication.getPrincipal()).getMember();
+            String username = member.getUsername();
+            String userRole = member.getRole().toString();
+            userInfo.append(username).append(" ").append(userRole);
+        }
+
+        // 파라미터 출력
+        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+        Enumeration<String> parameterNames = request.getParameterNames();
+        StringBuffer params = new StringBuffer();
+        parameterNames.asIterator().forEachRemaining(paramName ->
+                params.append(paramName).append(" = ").append(request.getParameter(paramName)).append(" "));
+
+        /* 로깅 형식
+        요청 URL : GET http://localhost:8081/test
+        요청 IP : 0:0:0:0:0:0:0:1
+        사용자 정보 : anonymous
+        실행 클래스 : String guckflix.backend.controller.TestController.test()
+        리퀘스트 파라미터 : page = 2255 page4 = 336
+        예외 클래스 : class guckflix.backend.exception.NotAllowedIdException
+        다음 예외 발생
+        guckflix.backend.exception.NotAllowedIdException: Not allowed ID
+        이하 스택트레이스...
+         */
+        log.warn("\n 요청 URL : {} \n 요청 IP : {} \n 사용자 정보 : {} \n 실행 클래스 : {} \n 리퀘스트 파라미터 : {} \n 예외 클래스 : {} \n 다음 예외 발생 \n",
+                request.getMethod() + " " + request.getRequestURL(),
+                request.getRemoteAddr(),
+                userInfo,
+                joinPoint.getSignature(),
+                params,
+                e.getClass(),
+                e);
+    }
 }
