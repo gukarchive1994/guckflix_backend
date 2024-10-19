@@ -1,6 +1,6 @@
 package guckflix.backend.exception;
 
-public class DuplicateException extends RuntimeException{
+public class DuplicateException extends RuntimeException implements BusinessException{
 
     public DuplicateException() {
     }

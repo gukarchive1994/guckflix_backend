@@ -1,6 +1,6 @@
 package guckflix.backend.exception;
 
-public class NotFoundException extends RuntimeException{
+public class NotFoundException extends RuntimeException implements BusinessException{
         public NotFoundException() {
         }
         public NotFoundException(String message) {

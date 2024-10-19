@@ -2,6 +2,7 @@ package guckflix.backend.log;
 
 import com.google.common.collect.Lists;
 import guckflix.backend.entity.Member;
+import guckflix.backend.exception.BusinessException;
 import guckflix.backend.exception.NotFoundException;
 import guckflix.backend.security.authen.PrincipalDetails;
 import lombok.RequiredArgsConstructor;
@@ -60,6 +61,12 @@ public class LogAspect {
     // 익셉션 로깅 AOP
     @AfterThrowing(pointcut = "execution(* guckflix.backend.controller.*.*(..))", throwing = "e")
     public void exceptionLogging(JoinPoint joinPoint, Exception e) {
+
+        // 예외 분류. 사용자 오입력, ID 중복같은 비즈니스 익셉션이면 로그를 남기지 않음
+        // 그 이외 모든 예외 로깅
+        if(e instanceof BusinessException) {
+            return;
+        }
 
         // 사용자 정보
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
