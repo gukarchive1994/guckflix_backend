@@ -6,7 +6,7 @@
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <!-- encoder 패턴 : 로그 출력 형태를 설정. 콘솔은 가독성을 위해 %green() 처럼 색상을 입힘 -->
         <encoder>
-            <pattern>%green(%d{yyyy-MM-dd HH:mm:ss.SSS}) %magenta([%thread]) %highlight(%5level) %cyan(%logger) - %msg%n</pattern>
+            <pattern>%green(%d{yyyy-MM-dd HH:mm:ss.SSS}) %magenta([%thread]) %highlight(%5level) [%X{request_id}] %cyan(%logger) - %msg%n</pattern>
         </encoder>
     </appender>
 

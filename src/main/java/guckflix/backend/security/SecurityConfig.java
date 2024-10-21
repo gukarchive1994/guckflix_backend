@@ -1,8 +1,10 @@
 package guckflix.backend.security;
 
+import guckflix.backend.log.MDCFilter;
 import guckflix.backend.security.authen.PrincipalOauth2UserService;
 import guckflix.backend.security.handlers.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -119,6 +121,15 @@ public class SecurityConfig {
         config.addExposedHeader("location");
         source.registerCorsConfiguration("/**", config); // 전체에 cors 필터 설정
         return new CorsFilter(source);
+    }
+
+    @Bean
+    public FilterRegistrationBean<MDCFilter> mdcFilter() {
+        FilterRegistrationBean<MDCFilter> registrationBean = new FilterRegistrationBean<>();
+        registrationBean.setFilter(new MDCFilter());
+        registrationBean.addUrlPatterns("/*");
+        registrationBean.setOrder(1);
+        return registrationBean;
     }
 
 }

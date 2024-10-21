@@ -51,3 +51,6 @@ logging.level:
   org.springframework.data.redis: DEBUG
   # org.hibernate.SQL: info
   org.hibernate.type.descriptor.sql.BasicBinder: trace
+slack:
+  webhook:
+    url: ${SLACK_WEBHOOK_URL}
