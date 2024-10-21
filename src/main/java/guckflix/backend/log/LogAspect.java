@@ -1,9 +1,7 @@
 package guckflix.backend.log;
 
-import com.google.common.collect.Lists;
 import guckflix.backend.entity.Member;
 import guckflix.backend.exception.BusinessException;
-import guckflix.backend.exception.NotFoundException;
 import guckflix.backend.security.authen.PrincipalDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +10,7 @@ import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
+import org.slf4j.MDC;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -19,11 +18,9 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 요구사항 :
@@ -44,6 +41,7 @@ import java.util.stream.Stream;
 public class LogAspect {
 
     private final LogRedisRepository inMemoryService;
+    private final SlackAlarm slackAlarm;
 
     // 이미지 컨트롤러는 제외. 관리해야 하는 키가 너무 많음
     @Pointcut("execution(* guckflix.backend.controller.*.*(..)) && !execution(* guckflix.backend.controller.ImageController.*(..))")
@@ -88,6 +86,10 @@ public class LogAspect {
         parameterNames.asIterator().forEachRemaining(paramName ->
                 params.append(paramName).append(" = ").append(request.getParameter(paramName)).append(" "));
 
+        String requestURL = request.getMethod() + " " + request.getRequestURL();
+        String IP = request.getRemoteAddr();
+        String occurredClass = joinPoint.getSignature().toString();
+
         /* 로깅 형식
         요청 URL : GET http://localhost:8081/test
         요청 IP : 0:0:0:0:0:0:0:1
@@ -100,12 +102,17 @@ public class LogAspect {
         이하 스택트레이스...
          */
         log.warn("\n 요청 URL : {} \n 요청 IP : {} \n 사용자 정보 : {} \n 실행 클래스 : {} \n 리퀘스트 파라미터 : {} \n 예외 클래스 : {} \n 다음 예외 발생 \n",
-                request.getMethod() + " " + request.getRequestURL(),
-                request.getRemoteAddr(),
+                requestURL,
+                IP,
                 userInfo,
-                joinPoint.getSignature(),
+                occurredClass,
                 params,
                 e.getClass(),
                 e);
+
+        String requestId = MDC.get("request_id");
+
+        // slack 알림 전송
+        slackAlarm.sendAlert(requestId, requestURL, occurredClass, e);
     }
 }
